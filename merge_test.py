@@ -1,9 +1,10 @@
 """
 This is a test script for merge routines
 """
-import merge
 import cv2
 from matplotlib import pyplot as plt
+
+from modules import merge
 
 
 def main():

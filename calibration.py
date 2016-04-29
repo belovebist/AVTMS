@@ -7,15 +7,14 @@ import cv2
 from matplotlib import pyplot as plt
 import numpy as np
 
-import merge
-import calibrate
+from modules import merge, calibrate
 
 
 def main():
     n_cols, n_rows = 2000, 1300
 
 
-    sourcedir = '../Images/multiple_views/'
+    sourcedir = 'Images/multiple_views/'
     views = [cv2.imread(sourcedir + 'view' + str(i + 1) + '.png', cv2.IMREAD_GRAYSCALE) for i in range(4)]
 
 
