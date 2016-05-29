@@ -12,10 +12,24 @@ def average(array):
     """
     N = len(array)
     ret = np.ndarray(shape=array[0].shape, dtype=np.uint8)
-    for i in range(N):
-        ret += array[i] / N
+#    for i in range(N):
+#        ret += array[i] / N
+
 
     return ret
+
+def anding(array):
+    """
+    Returns the pixelwise anding of multiple array
+    """
+    N = len(array)
+    ret = np.zeros(shape=array[0].shape, dtype=np.uint8)
+
+    for i in range(N):
+        ret |= array[i]
+
+    return ret
+
 
 def weightedAverage(weight, array):
     """
