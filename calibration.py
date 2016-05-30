@@ -29,19 +29,28 @@ def main():
 
 
 
-    for i in range(4):
-        plt.subplot(3, 4, 2 * i + 1), plt.imshow(views[i], cmap='gray'), plt.title('Input_' + str(i + 1))
-        plt.subplot(3, 4, 2 * i + 2), plt.imshow(planar_views[i], cmap='gray'), plt.title('View_' + str(i + 1))
+#    for i in range(4):
+#        plt.subplot(3, 4, 2 * i + 1), plt.imshow(views[i], cmap='gray'), plt.title('Input_' + str(i + 1))
+#        plt.subplot(3, 4, 2 * i + 2), plt.imshow(planar_views[i], cmap='gray'), plt.title('View_' + str(i + 1))
 
 
-    plt.subplot(3, 4, 9), 
-    plt.imshow(simple_merged, cmap='gray'), plt.title('Merged View')
+#    plt.subplot(3, 4, 9), 
+#    plt.imshow(simple_merged, cmap='gray'), plt.title('Merged View')
 #    plt.subplot(1, 2, 1), plt.imshow(simple_merged, cmap = 'gray'), plt.title('Merged_view')
 
 #    plt.subplot(1, 2, 2), plt.imshow(opposite_merged, cmap = 'gray'), plt.title('Merged_view')
 
+#    plt.show()
     
-    plt.show()
+#    for i in range(4):
+#        cv2.imshow("Image", views[i])
+#        cv2.waitKey()
+#        cv2.destroyAllWindows()
+    
+    cv2.imshow('Image', simple_merged)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
     pass
 
 if __name__ == '__main__':

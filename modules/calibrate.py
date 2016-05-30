@@ -23,7 +23,7 @@ def extractFieldLines(img):
 
     # Threshold the HSV image to get only yellow color
     mask = cv2.inRange(hsv,lower_yellow,upper_yellow)
-    
+
     # Mask the original image with the required color
     res = cv2.bitwise_and(img,img,mask=mask)
 
@@ -33,9 +33,9 @@ def extractFieldLines(img):
     # Applying binary thresholding
     ret, thresh = cv2.threshold(res_gray, 127, 255, cv2.THRESH_BINARY)
 
-#    cv2.imshow('image', thresh)
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
+    cv2.imshow('image', thresh)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
     return thresh
 
@@ -58,14 +58,13 @@ def extractCorners(img):
         for x,y in zip(listx,listy):
             sum_xy += x*y
             sum_X += (x**2)
-        
+
         nsum_xy = n*sum_xy
         nsum_X = n*sum_X
         slope = (nsum_xy-sumXsumY)/(nsum_X-sum_x_sqr)
         intercept = ((sum_X*sum_y)-(sum_x*sum_xy))/(nsum_X-sum_x_sqr)
-    	
+
         return slope, intercept
-        
 
     def findIntersection(line1, line2):
         ma, ca = line1[0], line1[1]
@@ -116,15 +115,15 @@ def extractCorners(img):
 		    
 #    print("I'm awesome")
     # Now, we determine the lines and intersection in the field
-    line1 = scanPointsInLine(img, 1, 1)
-    line2 = scanPointsInLine(img, 1, -1)
-    line3 = scanPointsInLine(img, -1, -1)
-    line4 = scanPointsInLine(img, -1, 1)
+    pointsInLine1 = scanPointsInLine(img, 1, 1)
+    pointsInLine2 = scanPointsInLine(img, 1, -1)
+    pointsInLine3 = scanPointsInLine(img, -1, -1)
+    pointsInLine4 = scanPointsInLine(img, -1, 1)
 	
-    line1 = leastSquareFit(line1)
-    line2 = leastSquareFit(line2)
-    line3 = leastSquareFit(line3)
-    line4 = leastSquareFit(line4)
+    line1 = leastSquareFit(pointsInLine1)
+    line2 = leastSquareFit(pointsInLine2)
+    line3 = leastSquareFit(pointsInLine3)
+    line4 = leastSquareFit(pointsInLine4)
 
 
     corners = findIntersection(line1, line2), findIntersection(line2, line3), findIntersection(line3, line4), findIntersection(line4, line1)
@@ -228,11 +227,10 @@ def run(images, res=(2000, 1300)):
         proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))
 
 #    for i in range(4):
- #       cv2.imshow("Image", cv2.warpPerspective(bin_images[i], proj_mat[i], res))
-  #      cv2.waitKey(0)
-   #     cv2.destroyAllWindows()
+#        cv2.imshow("Image", cv2.warpPerspective(bin_images[i], proj_mat[i], res))
+#        cv2.waitKey(0)
+#        cv2.destroyAllWindows()
 
 
-    
     return bin_images, proj_mat
 
