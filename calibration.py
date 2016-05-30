@@ -35,21 +35,21 @@ def main():
 
 
 #    plt.subplot(3, 4, 9), 
-#    plt.imshow(simple_merged, cmap='gray'), plt.title('Merged View')
+    plt.imshow(simple_merged, cmap='gray'), plt.title('Merged View')
 #    plt.subplot(1, 2, 1), plt.imshow(simple_merged, cmap = 'gray'), plt.title('Merged_view')
 
 #    plt.subplot(1, 2, 2), plt.imshow(opposite_merged, cmap = 'gray'), plt.title('Merged_view')
 
-#    plt.show()
+    plt.show()
     
 #    for i in range(4):
 #        cv2.imshow("Image", views[i])
 #        cv2.waitKey()
 #        cv2.destroyAllWindows()
     
-    cv2.imshow('Image', simple_merged)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+#    cv2.imshow('Image', simple_merged)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
 
     pass
 

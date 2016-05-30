@@ -33,9 +33,9 @@ def extractFieldLines(img):
     # Applying binary thresholding
     ret, thresh = cv2.threshold(res_gray, 127, 255, cv2.THRESH_BINARY)
 
-    cv2.imshow('image', thresh)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+#    cv2.imshow('image', thresh)
+#    cv2.waitKey(0)
+#    cv2.destroyAllWindows()
 
     return thresh
 
