@@ -6,19 +6,18 @@ import numpy as np
 import cv2
 
 
-def average(array):
+def useAverage(array):
     """
     Simply returns the average of N arrays
     """
     N = len(array)
-    ret = np.ndarray(shape=array[0].shape, dtype=np.uint8)
-#    for i in range(N):
-#        ret += array[i] / N
+    ret = array[0] / N
+    for i in range(1, N):
+        ret += array[i] / N
 
+    return np.uint8(ret)
 
-    return ret
-
-def anding(array):
+def useAnd(array):
     """
     Returns the pixelwise anding of multiple array
     """
@@ -26,10 +25,22 @@ def anding(array):
     ret = np.zeros(shape=array[0].shape, dtype=np.uint8)
 
     for i in range(N):
-        ret |= array[i]
+        ret &= array[i]
 
     return ret
 
+
+def useOr(array):
+    """
+    Returns the pixelwise anding of multiple array
+    """
+    N = len(array)
+    ret = np.zeros(shape=array[0].shape, dtype=np.uint8)
+
+    for i in range(N):
+        ret &= array[i]
+
+    return ret
 
 def weightedAverage(weight, array):
     """
@@ -41,4 +52,3 @@ def weightedAverage(weight, array):
         ret += array[i] * weight[i] / N
 
     return ret
-    

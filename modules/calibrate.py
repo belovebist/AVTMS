@@ -12,8 +12,9 @@ import numpy as np
 
 def extractFieldLines(img):
     """
-    This method masks the field and extracts the lines of required color
+    This method gets a mask of the field for given color
     """
+
     # To convert the image from BGR to HSV
     hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 
@@ -25,23 +26,30 @@ def extractFieldLines(img):
     mask = cv2.inRange(hsv,lower_yellow,upper_yellow)
 
     # Mask the original image with the required color
-    res = cv2.bitwise_and(img,img,mask=mask)
+    res = cv2.bitwise_and(img, img, mask=mask)
 
     # Conversion into grayscale image
-    res_gray = cv2.cvtColor(res,cv2.COLOR_BGR2GRAY)
+    res_gray = cv2.cvtColor(res, cv2.COLOR_BGR2GRAY)
 
     # Applying binary thresholding
     ret, thresh = cv2.threshold(res_gray, 127, 255, cv2.THRESH_BINARY)
 
-#    cv2.imshow('image', thresh)
-#    cv2.waitKey(0)
-#    cv2.destroyAllWindows()
-
     return thresh
+
+def getPerfectContours(img):
+    ret_img, contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    contours = [x for x in contours if cv2.contourArea(x) > 1]
+
+    img = np.zeros(shape=img.shape, dtype=img.dtype)
+
+    cv2.drawContours(img, contours, -1, 255, 1)
+
+    return img
 
 def extractCorners(img):
     """
-    Extracts the corner points of the rectangular field by solving 
+    Extracts the corner points of the rectangular field by solving
     the outer boundary lines
     """
 
@@ -76,12 +84,12 @@ def extractCorners(img):
         else:
             ca=-(-ca)
             mb=-(-mb)
-            
+
         x = (cb+ca)/(ma+mb)
         y = ma*x-ca
-    	
+
         return x, y
-        
+
     def scanPointsInLine(img, xInc, yInc):
         """
         Return the series of points in required line
@@ -90,10 +98,9 @@ def extractCorners(img):
         points = []
         width, height = img.shape[0] - 1, img.shape[1] - 1
 
-        
         if xInc == 1 and yInc == 1:
-    	    start = (0, 0)
-    	    end = [width, height]
+            start = (0, 0)
+            end = [width, height]
         elif xInc == 1 and yInc == -1:
             start = (0, height)
             end = [width, 0]
@@ -110,37 +117,34 @@ def extractCorners(img):
                     points += [(i, j)]
                     end[1] = j
                     break
-        
+
         return points
-		    
-#    print("I'm awesome")
+
     # Now, we determine the lines and intersection in the field
     pointsInLine1 = scanPointsInLine(img, 1, 1)
     pointsInLine2 = scanPointsInLine(img, 1, -1)
     pointsInLine3 = scanPointsInLine(img, -1, -1)
     pointsInLine4 = scanPointsInLine(img, -1, 1)
-	
+
     line1 = leastSquareFit(pointsInLine1)
     line2 = leastSquareFit(pointsInLine2)
     line3 = leastSquareFit(pointsInLine3)
     line4 = leastSquareFit(pointsInLine4)
 
-
     corners = findIntersection(line1, line2), findIntersection(line2, line3), findIntersection(line3, line4), findIntersection(line4, line1)
 
-	
     return corners
-    
+
 
 def getTransformationMatrix(input_points, output_img_res = (2000, 1300)):
     """
     Returns the perspective transformation matrix that transforms the input
-    points (i.e. set of points in the image) into the corresponding output 
+    points (i.e. set of points in the image) into the corresponding output
     points (i.e. Four corners of the rectangle for our case)
     """
 
     mat = cv2.getPerspectiveTransform(input_points, output_points)
-    
+
     return mat
 
 def cost(diff):
@@ -150,13 +154,13 @@ def cost(diff):
     return diff.mean()
 
 
-def run(images, res=(2000, 1300)):
+def run(image, res=(2000, 1300)):
     """
-    Find the transformation matrices for each camera such that the final images 
-    are perfectly aligned
+    Find the transformation matrices for each camera such that the final images
+    are perfectly aligned to the approximated top view
 
     Arguements :
-    images = list of multiple images from different views (4-views for our case)
+    image = list of images from different views (4-views for our case)
     res = Required resolution of the final output (projected) image
 
 
@@ -164,19 +168,19 @@ def run(images, res=(2000, 1300)):
     """
 
     # Number of views
-    N = len(images)
+    N = len(image)
 
     # Output points to which the input points are to be mapped
     output_points = [(0, res[1]), (res[0], res[1]), (res[0], 0), (0, 0)]
 
     # Images after line extraction in binary form
-    bin_images = []
+    bin_image = []
     # List of Corner points for each input images (view)
     input_points = []
-    for img in images:
-        print("Finding corners for image")
-        bin_images.append(extractFieldLines(img))
-        input_points.append(extractCorners(bin_images[-1]))
+    for i in range(N):
+        print("Finding Corners For View ", i + 1)
+        bin_image.append(getPerfectContours(extractFieldLines(image[i])))
+        input_points.append(extractCorners(bin_image[-1]))
 
 
     print(input_points[0])
@@ -184,53 +188,44 @@ def run(images, res=(2000, 1300)):
     print(input_points[2])
     print(input_points[3])
 
-    
     # List of Transformation matrix for each input images (view)
     proj_mat = []
+
     # List of output corner points for each image (view)
     op = [output_points for i in range(4)]
 
     # Find the projection matrix for each image (i.e. each camera view)
     for i in range(N):
-#        input_points.append(extractCorners(img))
         proj_mat.append(cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i])))
 
     # Take the first view as reference view
     # prefixed by 'trans' if the image is "transformed" image
-    transRef = cv2.warpPerspective(bin_images[0], proj_mat[0], res)
+    transRef = cv2.warpPerspective(bin_image[0], proj_mat[0], res)
 
 
     # Find the orientation of every other image, align them using cost function
     # and find the Projection (transformation) matrix
     for i in range(1, N):
 
-        print("For view ", i + 1)
+        print("Finding Projection Matrix For View ", i + 1)
 
         # Find the values of cost function for different rotations of the output image
         cost_value = []
 
         for j in range(4):      # since there are only four rotations for rectangle
-            transImg = cv2.warpPerspective(bin_images[i], proj_mat[i], res)
+            transImg = cv2.warpPerspective(bin_image[i], proj_mat[i], res)         # Finds the transformed view for given image
 
-            difference = transImg - transRef
+            difference = transImg - transRef                                        # Finds the difference between two images
 
-            cost_value.append(cost(difference))
+            cost_value.append(cost(difference))                                     # Calculates the cost using the difference between two images
 
-            op[i].append(op[i].pop(0))
-            proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))
-        
+            op[i].append(op[i].pop(0))                                              # Rotate the plane-to-project-on by 90 degrees
+            proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))   # Recalculates the projection matrix
+
         # Now, find the rotation at which the cost is minimum and then find the projection matrix
-        print(cost_value)
         for j in range(np.argmin(cost_value)):
             op[i].append(op[i].pop(0))
 
         proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))
 
-#    for i in range(4):
-#        cv2.imshow("Image", cv2.warpPerspective(bin_images[i], proj_mat[i], res))
-#        cv2.waitKey(0)
-#        cv2.destroyAllWindows()
-
-
-    return bin_images, proj_mat
-
+    return bin_image, proj_mat

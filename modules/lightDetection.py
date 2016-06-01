@@ -35,7 +35,7 @@ def detectTrafficLight(img):
     """
     # Conversion from BGR to HSV
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-    
+
     red_mask = getMask(hsv_img, color_hsv['red'])
     yellow_mask = getMask(hsv_img, color_hsv['yellow'])
     green_mask = getMask(hsv_img, color_hsv['green'])
