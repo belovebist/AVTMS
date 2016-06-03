@@ -22,10 +22,10 @@ def useAnd(array):
     Returns the pixelwise anding of multiple array
     """
     N = len(array)
-    ret = np.zeros(shape=array[0].shape, dtype=np.uint8)
 
-    for i in range(N):
-        ret &= array[i]
+    ret = array[0]
+    for i in range(1, N):
+        ret = ret & array[i]
 
     return ret
 
@@ -35,10 +35,10 @@ def useOr(array):
     Returns the pixelwise anding of multiple array
     """
     N = len(array)
-    ret = np.zeros(shape=array[0].shape, dtype=np.uint8)
 
-    for i in range(N):
-        ret &= array[i]
+    ret = array[0]
+    for i in range(1, N):
+        ret |= array[i]
 
     return ret
 

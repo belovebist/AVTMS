@@ -14,7 +14,7 @@ def main():
 
     sourcedir = 'Images/multiple_views/'
 
-    views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0000.png', cv2.IMREAD_COLOR) for i in range(4)]
+    views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0387.png', cv2.IMREAD_COLOR) for i in range(4)]
 
     # Making view_2 as reference view by passing view_2 as first element of list
     views.append(views.pop(0))
@@ -32,7 +32,9 @@ def main():
 #        plt.subplot(3, 4, 2 * i + 2), plt.imshow(planar_views[i], cmap='gray'), plt.title('View_' + str(i + 1))
 
 #    plt.subplot(3, 4, 9),
-    plt.imshow(simple_merged, cmap='gray'), plt.title('Merged View')
+    plt.imshow(simple_merged[:, :, -1::-1], cmap='gray'), plt.title('Merged View')
+#    plt.imshow(planar_views[1]), plt.title('Merged View')
+#    plt.imshow(_views[1], cmap='gray'), plt.title('Merged View')
 #    plt.subplot(1, 2, 1), plt.imshow(simple_merged, cmap = 'gray'), plt.title('Merged_view')
 
 #    plt.subplot(1, 2, 2), plt.imshow(opposite_merged, cmap = 'gray'), plt.title('Merged_view')

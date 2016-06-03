@@ -37,12 +37,27 @@ def extractFieldLines(img):
     return thresh
 
 def getPerfectContours(img):
+
+    # Blur the input image to smoothen out the discontinuities
+    img_blur = cv2.GaussianBlur(img, (5, 5), 0)
+
+    # Find the contours for blurred image
+    ret_img, contours, hierarchy = cv2.findContours(img_blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Only keep the contours with large areas, i.e. noiseless contours
+    contours = [x for x in contours if cv2.contourArea(x) > 5]
+
+    # Generate a mask that covers only the contour area
+    mask = np.zeros(shape=img.shape, dtype=img.dtype)
+    cv2.drawContours(mask, contours, -1, 255, cv2.FILLED)
+
+    # Apply the mask to the original image
+    img = cv2.bitwise_and(img, img, mask=mask)
+
+    # Find the contour again
     ret_img, contours, hierarchy = cv2.findContours(img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-    contours = [x for x in contours if cv2.contourArea(x) > 1]
-
-    img = np.zeros(shape=img.shape, dtype=img.dtype)
-
+    # Draw the contours
     cv2.drawContours(img, contours, -1, 255, 1)
 
     return img
@@ -154,7 +169,7 @@ def cost(diff):
     return diff.mean()
 
 
-def run(image, res=(2000, 1300)):
+def run(image, res=(1000, 550)):
     """
     Find the transformation matrices for each camera such that the final images
     are perfectly aligned to the approximated top view
@@ -179,8 +194,8 @@ def run(image, res=(2000, 1300)):
     input_points = []
     for i in range(N):
         print("Finding Corners For View ", i + 1)
-        bin_image.append(getPerfectContours(extractFieldLines(image[i])))
-        input_points.append(extractCorners(bin_image[-1]))
+        bin_image.append(extractFieldLines(image[i]))
+        input_points.append(extractCorners(getPerfectContours(bin_image[-1].copy())))
 
 
     print(input_points[0])
@@ -222,10 +237,10 @@ def run(image, res=(2000, 1300)):
             op[i].append(op[i].pop(0))                                              # Rotate the plane-to-project-on by 90 degrees
             proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))   # Recalculates the projection matrix
 
-        # Now, find the rotation at which the cost is minimum and then find the projection matrix
+    # Now, find the rotation at which the cost is minimum and then find the projection matrix
         for j in range(np.argmin(cost_value)):
             op[i].append(op[i].pop(0))
 
         proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))
 
-    return bin_image, proj_mat
+    return proj_mat
