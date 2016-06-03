@@ -16,9 +16,9 @@ def main():
     """
     # Load the reference views
     sourcedir = 'Images/multiple_views/'
-    ref_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0387.png', cv2.IMREAD_COLOR) for i in range(4)]
+    ref_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0000.png', cv2.IMREAD_COLOR) for i in range(4)]
 
-    test_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '1221.png', cv2.IMREAD_COLOR) for i in range(4)]
+    test_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0106.png', cv2.IMREAD_COLOR) for i in range(4)]
 
     # Making view_2 as reference view by passing view_2 as first element of list
     ref_views.append(ref_views.pop(0))
@@ -28,11 +28,8 @@ def main():
 
     # Define a field to work on
     field = obj.Field(nCamera=4)
-
-    # Initialize by finding the parameters of the cameras in the field
     field.initCameraParameters(ref_views)
-
-    # Reconstruct the field
+    # Reconstruct the field's top view
     tv = field.reconstruct()
 
     obj_pos = field.findObjectPosition(test_views)

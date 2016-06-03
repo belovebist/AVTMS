@@ -41,7 +41,7 @@ class Camera:
         """
         x = cv2.absdiff(newFrame, self.refView)
         x = cv2.cvtColor(x, cv2.COLOR_BGR2GRAY)
-        ret, x = cv2.threshold(x, 2, 255, cv2.THRESH_BINARY)
+        ret, x = cv2.threshold(x, 1, 255, cv2.THRESH_BINARY)
         return x
 
     pass
