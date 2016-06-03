@@ -37,6 +37,10 @@ def extractFieldLines(img):
     return thresh
 
 def getPerfectContours(img):
+    """
+    Contour area threshold for noise is the most important thing here
+    """
+    contAreaThreshold = 50
 
     # Blur the input image to smoothen out the discontinuities
     img_blur = cv2.GaussianBlur(img, (5, 5), 0)
@@ -45,7 +49,7 @@ def getPerfectContours(img):
     ret_img, contours, hierarchy = cv2.findContours(img_blur, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     # Only keep the contours with large areas, i.e. noiseless contours
-    contours = [x for x in contours if cv2.contourArea(x) > 5]
+    contours = [x for x in contours if cv2.contourArea(x) > contAreaThreshold]
 
     # Generate a mask that covers only the contour area
     mask = np.zeros(shape=img.shape, dtype=img.dtype)
@@ -196,12 +200,6 @@ def run(image, res=(1000, 550)):
         print("Finding Corners For View ", i + 1)
         bin_image.append(extractFieldLines(image[i]))
         input_points.append(extractCorners(getPerfectContours(bin_image[-1].copy())))
-
-
-    print(input_points[0])
-    print(input_points[1])
-    print(input_points[2])
-    print(input_points[3])
 
     # List of Transformation matrix for each input images (view)
     proj_mat = []
