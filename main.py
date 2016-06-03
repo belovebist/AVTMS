@@ -13,12 +13,13 @@ import modules.objects as obj
 def main():
     """
     This is the starting part of the System
+    000, 106, 211, 387, 510, 648, 702, 866, 1221
     """
     # Load the reference views
     sourcedir = 'Images/multiple_views/'
     ref_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0000.png', cv2.IMREAD_COLOR) for i in range(4)]
 
-    test_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '0106.png', cv2.IMREAD_COLOR) for i in range(4)]
+    test_views = [cv2.imread(sourcedir + 'view_' + str(i + 1) + '/view_' + str(i + 1) + '1221.png', cv2.IMREAD_COLOR) for i in range(4)]
 
     # Making view_2 as reference view by passing view_2 as first element of list
     ref_views.append(ref_views.pop(0))
