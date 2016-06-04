@@ -196,8 +196,11 @@ def run(image, res=(1000, 550)):
     bin_image = []
     # List of Corner points for each input images (view)
     input_points = []
+
+    print("\nInitializing camera parameters : ")
+    print("\n\tFinding Corners For : ", end = '\t\t')
     for i in range(N):
-        print("Finding Corners For View ", i + 1)
+        print("view ", i, end= '  ')
         bin_image.append(extractFieldLines(image[i]))
         input_points.append(extractCorners(getPerfectContours(bin_image[-1].copy())))
 
@@ -218,10 +221,9 @@ def run(image, res=(1000, 550)):
 
     # Find the orientation of every other image, align them using cost function
     # and find the Projection (transformation) matrix
+    print("\n\tFinding Projection Matrix For : ", end = '\t')
     for i in range(1, N):
-
-        print("Finding Projection Matrix For View ", i + 1)
-
+        print("View ", i, end = '  ')
         # Find the values of cost function for different rotations of the output image
         cost_value = []
 
@@ -241,4 +243,5 @@ def run(image, res=(1000, 550)):
 
         proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))
 
+    print()
     return proj_mat

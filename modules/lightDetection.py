@@ -58,6 +58,12 @@ def detectTrafficLight(img):
     else:
         return None
 
+def findRegionOfInterest(img_seq):
+    """
+    Finds the region of interest for the purpose of light detection
+    """
+    pass
+
 
 
 def main():
