@@ -1,0 +1,5 @@
+Camera calibration background :
+	Intrinsic parameters :
+		Image central position
+		Focal length (mm)
+		Distortion Coefficients

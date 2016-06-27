@@ -1,9 +1,7 @@
 """
 This module contains various methods for merging (fusing) multiple images
 """
-
 import numpy as np
-import cv2
 
 
 def useAverage(array):
@@ -16,6 +14,7 @@ def useAverage(array):
         ret += array[i] / N
 
     return np.uint8(ret)
+
 
 def useAnd(array):
     """
@@ -42,13 +41,58 @@ def useOr(array):
 
     return ret
 
-def weightedAverage(weight, array):
+
+def getWeightMatrix(wt, res, interpolation='linear'):
+    """
+    Returns the interpoleted weight matrix for given dimension
+
+    wt : tuple containing weight for four corners
+         in order (0, 0), (0, 1), (1, 1), (1, 0)
+    """
+    def getComponentWeight(wt, res):
+
+        w, h = res
+        mat = np.zeros(shape=(h, w), dtype=np.float)
+
+        w, h = w - 1, h - 1
+
+        for i in range(w):
+            for j in range(h):
+                mat[j][i] = wt * float(w - i)/w * float(h - j)/h
+
+        return mat
+
+    x0 = getComponentWeight(wt[0], res)
+    x1 = getComponentWeight(wt[1], res)[-1::-1, :]
+    x2 = getComponentWeight(wt[2], res)[-1::-1, -1::-1]
+    x3 = getComponentWeight(wt[3], res)[:, -1::-1]
+
+    return x0 + x1 + x2 + x3
+
+
+def normalizeWeights(weight):
+    """
+    Returns the normalized weight
+    """
+    N = len(weight)
+    x = weight[0]
+    for i in range(1, N):
+        x = x + weight[i]
+
+    max = np.max(x)
+    new_weight = [weight[i] / max for i in range(N)]
+
+    return new_weight
+
+
+def weightedAverage(array, weight):
     """
     Returns the weighted average of the input array
     """
     N = len(array)
-    ret = np.ndarray(shape=array[0].shape, dtype=np.uint8)
+    ret = np.zeros(shape=array[0].shape, dtype=np.float)
     for i in range(N):
-        ret += array[i] * weight[i] / N
+        wt = np.dstack([weight[i], weight[i], weight[i]])
+        ret += array[i] * wt
 
-    return ret
+    return np.uint8(ret)

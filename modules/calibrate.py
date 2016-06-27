@@ -150,7 +150,10 @@ def extractCorners(img):
     line3 = leastSquareFit(pointsInLine3)
     line4 = leastSquareFit(pointsInLine4)
 
-    corners = findIntersection(line1, line2), findIntersection(line2, line3), findIntersection(line3, line4), findIntersection(line4, line1)
+    corners = np.array([findIntersection(line1, line2),
+                        findIntersection(line2, line3),
+                        findIntersection(line3, line4),
+                        findIntersection(line4, line1)])
 
     return corners
 
@@ -190,7 +193,7 @@ def run(image, res=(1000, 550)):
     N = len(image)
 
     # Output points to which the input points are to be mapped
-    output_points = [(0, res[1]), (res[0], res[1]), (res[0], 0), (0, 0)]
+    output_points = [(0, 0), (0, res[1]), (res[0], res[1]), (res[0], 0)]
 
     # Images after line extraction in binary form
     bin_image = []
@@ -198,9 +201,9 @@ def run(image, res=(1000, 550)):
     input_points = []
 
     print("\nInitializing camera parameters : ")
-    print("\n\tFinding Corners For : ", end = '\t\t')
+    print("\n\tFinding Corners For : ")
     for i in range(N):
-        print("view ", i, end= '  ')
+        print("\tview ", i)
         bin_image.append(extractFieldLines(image[i]))
         input_points.append(extractCorners(getPerfectContours(bin_image[-1].copy())))
 
@@ -221,9 +224,9 @@ def run(image, res=(1000, 550)):
 
     # Find the orientation of every other image, align them using cost function
     # and find the Projection (transformation) matrix
-    print("\n\tFinding Projection Matrix For : ", end = '\t')
+    print("\n\tFinding Projection Matrix For : ")
     for i in range(1, N):
-        print("View ", i, end = '  ')
+        print("\tView ", i)
         # Find the values of cost function for different rotations of the output image
         cost_value = []
 
@@ -243,5 +246,4 @@ def run(image, res=(1000, 550)):
 
         proj_mat[i] = cv2.getPerspectiveTransform(np.float32(input_points[i]), np.float32(op[i]))
 
-    print()
     return proj_mat

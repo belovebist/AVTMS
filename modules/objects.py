@@ -3,12 +3,10 @@ This module implements the basic methods used to find the position of the vehicl
 It uses the camera matrices for projection, that can be found using calibrate module
 """
 import os
-import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 
 from . import merge, calibrate
-
 
 
 class Camera:
@@ -16,11 +14,19 @@ class Camera:
     'Camera' class holds all the information about a camera.
     The camera projection matrix, the camera reference view, intrinsic parameters if required
     """
-    def __init__(self, projMatrix=None, refView=None):
+    def __init__(self, id, projMatrix=None, refView=None):
         """
         Initialize the camera projection matrix and camera reference view
         """
+        self.id = id
+        self.weightMatrix = None
         self.projMatrix = projMatrix
+        self.refView = refView
+
+    def setRefView(self, refView):
+        """
+        Sets the reference view for the camera
+        """
         self.refView = refView
 
     def setProjMatrix(self, projMatrix):
@@ -29,11 +35,21 @@ class Camera:
         """
         self.projMatrix = projMatrix
 
-    def setRefView(self, refView):
+    def setWeightMatrix(self, res):
         """
-        Sets the reference view for the camera
+        Sets the weight for all pixel positions in the projected image
         """
-        self.refView = refView
+        wt = [1.0, 0.6, 0.5, 0.2]
+        if self.id == 0:
+            wt = [wt[1], wt[0], wt[2], wt[3]]
+        elif self.id == 1:
+            wt = [wt[0], wt[1], wt[3], wt[2]]
+        elif self.id == 2:
+            wt = [wt[2], wt[3], wt[1], wt[0]]
+        elif self.id == 3:
+            wt = [wt[3], wt[2], wt[1], wt[0]]
+
+        self.weightMatrix = merge.getWeightMatrix(wt, res)
 
     def getFrameDifference(self, newFrame):
         """
@@ -62,8 +78,6 @@ class Camera:
                 yield cv2.imread(fname, cv2.IMREAD_COLOR)
         return
 
-    pass
-
 
 class Field:
     """
@@ -75,14 +89,14 @@ class Field:
         """
         Initialize the field with number of cameras to be used along with the field resolution for reconstructed view
         """
-        assert nCamera != None
+        assert nCamera is not None
 
         self.nCamera = nCamera
-        self.camera = [Camera() for i in range(nCamera)]
+        self.camera = [Camera(id=i) for i in range(nCamera)]
+        for i in range(nCamera):
+            self.camera[i].id = i
 
         self.res = res
-
-        pass
 
     def initCameraParameters(self, useFrame0=True, refViews=None):
         """
@@ -92,7 +106,7 @@ class Field:
         """
         self.getFrames = self.getFrameGenerator()
 
-        if useFrame0 == True:
+        if useFrame0 is True:
             refViews, empty = next(self.getFrames)
 
         projMat = calibrate.run(refViews)
@@ -100,8 +114,9 @@ class Field:
         for i in range(self.nCamera):
             self.camera[i].setProjMatrix(projMat[i])
             self.camera[i].setRefView(refViews[i])
+            self.camera[i].setWeightMatrix(self.res)
 
-        return projMat, refViews
+        return True
 
     def initCameraChannels(self, channel=None):
         """
@@ -109,7 +124,7 @@ class Field:
 
         For simulation : it is just a list of files of the video sources
         """
-        assert channel != None
+        assert channel is not None
 
         print("\nInitializing Camera Channels : ")
 
@@ -119,24 +134,28 @@ class Field:
 
         return True
 
-
-
-    def reconstruct(self, views=None):
+    def reconstruct(self, mergeType='simple', views=None, updateTV=False):
         """
         Reconstructs the field i.e. Top-View
         """
-        if views == None:
+        if views is None:
             projectedViews = [cv2.warpPerspective(self.camera[i].refView, self.camera[i].projMatrix, self.res) for i in range(self.nCamera)]
-
-            ret = self.topView = merge.useAverage(projectedViews)
 
         else:
             projectedViews = [cv2.warpPerspective(views[i], self.camera[i].projMatrix, self.res) for i in range(self.nCamera)]
 
+        if mergeType == 'simple':
             ret = merge.useAverage(projectedViews)
 
-        return ret
+        elif mergeType == 'weighted':
+            weightMatrices = tuple([self.camera[i].weightMatrix for i in range(self.nCamera)])
+            weightMatrices = merge.normalizeWeights(weightMatrices)
+            ret = merge.weightedAverage(projectedViews, weightMatrices)
 
+        if updateTV is True:
+            self.topView = ret
+
+        return ret
 
     def findObjectPosition(self, views=None, retWithBG=True):
         """
@@ -146,19 +165,22 @@ class Field:
 
         If retWithBG is True, the position of object drawn inside the reference field is returned
         """
-        assert views != None
+        assert views is not None
 
         views_BGless = [self.camera[i].getFrameDifference(views[i]) for i in range(self.nCamera)]
 
         views_projected = [cv2.warpPerspective(views_BGless[i], self.camera[i].projMatrix, self.res) for i in range(self.nCamera)]
 
+#        for i in range(4):
+#            plt.subplot(2, 2, i+1), plt.imshow(views_projected[i], cmap='gray')
+#        plt.show()
+
         pos = merge.useAnd(views_projected)
 
-        if retWithBG == True:
+        if retWithBG is True:
             return merge.useOr([self.topView, cv2.merge([pos, pos, pos])])
         else:
             return pos
-
 
     def getFrameGenerator(self):
         """
@@ -180,17 +202,15 @@ class Field:
             # Flag that indicates whether frames from all camera are present or not
             empty = not all([False if x is None else True for x in frames])
 
-            # If not all frames are available then it returns empty=True
+            # If common frames from all camera are not available then it returns empty=True
 
-            if empty == True:
+            if empty is True:
                 break
 
             yield frames, empty
 
         # Only reaches when no more frames are present
         yield frames, empty
-
-
 
     def startTracking(self):
         """
@@ -204,15 +224,14 @@ class Field:
 
         while(True):
             frames, empty = next(self.getFrames)
-            if empty == True:
+            if empty is True:
                 break
-            obj_pos = self.findObjectPosition(frames)
-#            temp = merge.useOr([tv, cv2.merge([obj_pos, obj_pos, obj_pos])])
-            tv = merge.useOr([tv, obj_pos])
+            obj_pos = self.findObjectPosition(frames, retWithBG=False)
+            tv = merge.useOr([tv, cv2.merge([obj_pos, obj_pos, obj_pos])])
+#            tv = merge.useOr([tv, obj_pos])
 
 #        return merge.useOr([tv, temp])
         return tv
-
 
     pass
 
